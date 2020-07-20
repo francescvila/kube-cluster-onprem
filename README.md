@@ -152,7 +152,7 @@ It is important to check if port forwarding is enabled.
 Execute the playbook in `workers.yml` on your local machine:
 
 ```
-ansible-playbook -i hosts ~/kube-cluster/workers.yml
+ansible-playbook -i hosts ./workers.yml
 ```
 
 ## Verifying the Cluster
