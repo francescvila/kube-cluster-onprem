@@ -192,6 +192,14 @@ kubectl get services
 
 To test that everything is working, visit `http://worker_1_ip:nginx_port` or `http://worker_2_ip:nginx_port` through a browser on your local machine. We can either visit `http://master_ip:nginx_port`. It works, as well.
 
+We have to bear in mind that `nginx_port` is a port number assigned locally by a cluster component (kube-proxy) to the service object that exposes the Nginx pod. It is not the nginx port exposed within the container's pod itself.
+
+You can get the assigned node port number using this command:
+
+```
+kubectl get -o jsonpath="{.spec.ports[0].nodePort}" services nginx && echo
+```
+
 Change master and workers IPs with your own server IPs.
 
 To remove the Nginx application, first we delete the nginx service from the master node:
