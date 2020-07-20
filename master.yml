@@ -1,0 +1,39 @@
+- hosts: master
+  become: yes
+  tasks:   
+    - name: Enable port forwarding
+      iptables:
+        chain: FORWARD
+        jump: ACCEPT
+        state: present
+
+    - name: Check if Kubernetes port is in use
+      shell: "ss -tp state listening sport = :10250 | grep -i kubelet|cat"
+      register: ss_port_output
+
+    - debug: msg="Kubernetes is already running"
+      when: ss_port_output.stdout | length > 0
+
+    - name: initialize the cluster
+      shell: kubeadm init --kubernetes-version stable-1.14 --token-ttl 0 --pod-network-cidr=10.244.0.0/16 --apiserver-cert-extra-sans={{ ansible_host }}
+      when: ss_port_output.stdout | length == 0
+
+    - name: create .kube directory
+      become: yes
+      become_user: operator
+      file:
+        path: $HOME/.kube
+        state: directory
+        mode: 0755
+
+    - name: copy admin.conf to user's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/operator/.kube/config
+        remote_src: yes
+        owner: operator
+
+    - name: install Pod network
+      become: yes
+      become_user: operator
+      shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/a70459be0084506e4ec919aa1c114638878db11b/Documentation/kube-flannel.yml

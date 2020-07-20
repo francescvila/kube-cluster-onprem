@@ -1,0 +1,3 @@
+*.retry
+hosts.local
+/certs

@@ -1,0 +1,67 @@
+- hosts: master
+  become: yes
+  gather_facts: false
+  tasks:
+    - name: get join command
+      shell: kubeadm token create --print-join-command
+      register: join_command_raw
+
+    - name: set join command
+      set_fact:
+        join_command: "{{ join_command_raw.stdout_lines[0] }}"
+
+
+- hosts: workers
+  become: yes
+  tasks:
+    - name: Enable port forwarding
+      iptables:
+        chain: FORWARD
+        jump: ACCEPT
+        state: present
+
+    - name: Check that the daemon.json exists
+      stat:
+        path: /etc/docker/daemon.json
+      register: stat_result
+
+    # Switch cgroup driver, from cgroupfs to systemd. The recommended driver is "systemd".
+    - name: Switch cgroup driver, from cgroupfs to systemd
+      copy:
+        src: daemon.json
+        dest: "/etc/docker/daemon.json"
+        owner: root
+        group: root
+        mode: '0644'
+      when: not stat_result.stat.exists
+
+    - name: Create docker service directory
+      file:
+        path: "/etc/systemd/system/docker.service.d"
+        owner: root
+        group: root
+        state: directory
+        mode: '0755'
+      when: not stat_result.stat.exists
+
+    - name: Restart systemd daemon forcefully
+      systemd:
+        daemon_reexec: yes
+      when: not stat_result.stat.exists
+
+    # Check if Kubernetes is already running
+    - name: Check if Kubernetes port is in use
+      shell: "ss -tp state listening sport = :10250 | grep -i kubelet|cat"
+      register: ss_port_output
+
+    - debug: msg="Kubernetes is already running"
+      when: ss_port_output.stdout | length > 0
+
+    - name: Restart systemd docker service
+      systemd:
+        state: started
+        name: docker
+
+    - name: join cluster
+      shell: "{{ hostvars['master'].join_command }}"
+      when: ss_port_output.stdout | length == 0

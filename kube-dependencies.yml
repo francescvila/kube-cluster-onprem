@@ -1,0 +1,64 @@
+- hosts: all
+  become: yes
+  tasks:
+   - name: install remote apt deps
+     apt:
+       name: ['apt-transport-https', 'ca-certificates', 'gnupg2', 'software-properties-common', 'curl', 'python-apt']
+       state: present
+
+   - name: add Docker apt-key
+     apt_key:
+       url: https://download.docker.com/linux/debian/gpg
+       state: present
+
+   - name: add Docker's APT repository
+     apt_repository:
+       repo: "deb [arch=amd64] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable"
+       state: present
+       filename: 'docker'
+
+   - name: install Docker
+     apt:
+       name: ['docker-ce=5:18.09*']
+       state: present
+       update_cache: yes
+
+   - name: add Kubernetes apt-key
+     apt_key:
+       url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+       state: present
+
+   - name: add Kubernetes' APT repository
+     apt_repository:
+      repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+      state: present
+      filename: 'kubernetes'
+
+   - name: install kubelet
+     apt:
+       name: kubelet=1.14.0-00
+       state: present
+       update_cache: yes
+
+   - name: install kubeadm
+     apt:
+       name: kubeadm=1.14.0-00
+       state: present
+
+   - name: Disable SWAP since kubernetes can't work with swap enabled
+     shell: swapoff -a
+
+   - name: Disable SWAP in fstab since kubernetes can't work with swap enabled
+     replace:
+       path: /etc/fstab
+       regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+       replace: '# \1'       
+
+- hosts: master
+  become: yes
+  tasks:
+   - name: install kubectl
+     apt:
+       name: kubectl=1.14.0-00
+       state: present
+       force: yes

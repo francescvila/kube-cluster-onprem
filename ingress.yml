@@ -1,0 +1,22 @@
+- hosts: master
+  become: yes
+  tasks:  
+    - name: get Helm
+      get_url:
+        url: https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get
+        dest: /tmp/get_helm.sh
+        mode: '0700'
+    
+    - name: install Helm v3
+      shell: DESIRED_VERSION=v3.2.3 /tmp/get_helm.sh
+
+    - name: get Helm version
+      shell: helm version
+      register: helm_version
+    
+    - debug: msg="Helm version {{ helm_version.stdout_lines[0] }}"
+
+    - name: install Ingress Controller with Helm
+      become_user: operator
+      shell: helm install ingress-nginx stable/nginx-ingress --set controller.service.externalIPs[0]="{{ ansible_host }}"
+
