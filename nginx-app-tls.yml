@@ -27,8 +27,8 @@ metadata:
   name: nginx-app-secret-tls
   namespace: nginx-app-ns
 data:
-  tls.crt: <base64 encoded cert>
-  tls.key: <base64 encode key>
+  tls.crt: <paste here base64 encoded cert>
+  tls.key: <paste here base64 encode key>
 type: kubernetes.io/tls
 ---
 apiVersion: v1
