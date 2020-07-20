@@ -157,7 +157,7 @@ ansible-playbook -i hosts ./workers.yml
 
 ## Verifying the Cluster
 
-In order to verify if all cluster nodes are up and running and connectivity between the master node and workers is working correctly, we can log in the master node and ensure that all nodes are ready.
+In order to verify if all cluster nodes are up and running and connectivity between the master node and workers is working correctly, we can log in the master node (as operator user) and ensure that all nodes are ready.
 
 ```
 kubectl get nodes
