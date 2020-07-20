@@ -288,7 +288,7 @@ cat tls.crt | base64 | tr -d '\n' && echo
 cat tls.key | base64 | tr -d '\n' && echo
 ```
 
-We copy and paste the values on each key in the data section of the secret component.
+We copy and paste the values on each key in the data section of the secret component of file `nginx-app-tls.yaml`.
 
 ```yaml
 apiVersion: v1
